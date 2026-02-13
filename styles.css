@@ -1,0 +1,59 @@
+body {
+background: #0f172a;
+color: white;
+font-family: Arial;
+padding: 20px;
+}
+
+h1 {
+text-align: center;
+}
+
+.top-bar {
+display: flex;
+gap: 10px;
+flex-wrap: wrap;
+margin-bottom: 20px;
+}
+
+input, select {
+padding: 5px;
+border-radius: 6px;
+border: none;
+}
+
+button {
+padding: 6px 12px;
+border-radius: 8px;
+border: none;
+cursor: pointer;
+font-weight: bold;
+}
+
+button:hover {
+opacity: 0.9;
+}
+
+table {
+width: 100%;
+margin-bottom: 15px;
+}
+
+th, td {
+padding: 6px;
+text-align: center;
+}
+
+.chart-container {
+width: 45%;
+background: rgba(255,255,255,0.03);
+padding: 20px;
+border-radius: 16px;
+box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+}
+
+.graficos {
+display: flex;
+justify-content: space-between;
+flex-wrap: wrap;
+}
