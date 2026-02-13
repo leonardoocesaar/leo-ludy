@@ -1,88 +1,37 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Leo & Ludy</title>
+<title>Leo & Ludy - Asset Allocation</title>
 
 <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf"></script>
 
-<style>
-body{
-    font-family: Arial;
-    background:#0f172a;
-    color:white;
-    padding:20px;
-}
-h1{text-align:center;}
-
-input, select{
-    padding:6px;
-    border-radius:6px;
-    border:none;
-    margin:4px;
-}
-
-table{
-    width:100%;
-    margin-top:15px;
-    border-collapse:collapse;
-}
-th,td{
-    padding:8px;
-    text-align:center;
-}
-
-button{
-    padding:10px 16px;
-    border-radius:8px;
-    border:none;
-    cursor:pointer;
-    font-weight:bold;
-    margin:5px;
-}
-
-.btn-add{background:#16a34a;color:white;}
-.btn-remove{background:#dc2626;color:white;}
-.btn-save{background:linear-gradient(135deg,#8e2de2,#4a00e0);color:white;}
-.btn-pdf{background:#f59e0b;color:white;}
-
-.graficos{
-    display:flex;
-    justify-content:space-around;
-    margin-top:30px;
-}
-
-canvas{
-    width:450px !important;
-    height:450px !important;
-}
-</style>
+<link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
 <h1>Leo & Ludy</h1>
 
-<label>Aporte:</label>
-<input type="number" id="aporte">
+<div class="top-bar">
+Aporte: <input type="number" id="aporte" value="500">
+Patrimônio Atual: <input type="number" id="patrimonio" value="1500">
 
-<label>Patrimônio Atual:</label>
-<input type="number" id="patrimonio">
-
-<select id="perfil" onchange="aplicarPerfil()">
-<option value="">Selecionar Perfil</option>
-<option value="conservador">Perfil Conservador</option>
-<option value="moderado">Perfil Moderado</option>
-<option value="arrojado">Perfil Arrojado</option>
-<option value="agressivo">Perfil Agressivo Global</option>
-<option value="personalizado">Personalizado</option>
+<select id="perfil">
+<option value="institucional">Perfil Institucional (40/30/20/10)</option>
+<option value="allweather">All Weather (30/40/15/7.5/7.5)</option>
+<option value="barbell">Barbell Strategy</option>
 </select>
 
-<button class="btn-save" onclick="salvarLayout()">💾 Salvar Layout</button>
-<button class="btn-pdf" onclick="exportarPDF()">📄 Exportar PDF</button>
+<button onclick="salvarLayout()">Salvar Layout</button>
+<button onclick="exportarPDF()">Exportar PDF</button>
+</div>
 
 <table id="tabela">
 <thead>
@@ -90,200 +39,31 @@ canvas{
 <th>Classe</th>
 <th>% Atual</th>
 <th>% Meta</th>
-<th>Aporte Sugerido</th>
 <th>Remover</th>
 </tr>
 </thead>
 <tbody></tbody>
 </table>
 
-<button class="btn-add" onclick="adicionarLinha()">+ Adicionar Linha</button>
+<button onclick="adicionarLinha()">+ Adicionar Linha</button>
 
 <div class="graficos">
-<div>
-<h3>Atual</h3>
+<div class="chart-container">
+<h2>Atual</h2>
 <canvas id="graficoAtual"></canvas>
 </div>
-<div>
-<h3>Após Aporte</h3>
-<canvas id="graficoNovo"></canvas>
+
+<div class="chart-container">
+<h2>Meta</h2>
+<canvas id="graficoMeta"></canvas>
 </div>
 </div>
+
+<script src="script.js"></script>
 
 <script>
-let chartAtual, chartNovo;
-
-function adicionarLinha(classe='', atual='', meta=''){
-    const tbody=document.querySelector("#tabela tbody");
-    const tr=document.createElement("tr");
-
-    tr.innerHTML=`
-    <td><input value="${classe}" class="classe"></td>
-    <td><input type="number" value="${atual}" class="atual"></td>
-    <td><input type="number" value="${meta}" class="meta"></td>
-    <td class="aporteSug">-</td>
-    <td><button class="btn-remove" onclick="this.parentElement.parentElement.remove()">X</button></td>
-    `;
-    tbody.appendChild(tr);
-}
-
-function aplicarPerfil(){
-    const perfil=document.getElementById("perfil").value;
-    const tbody=document.querySelector("#tabela tbody");
-    tbody.innerHTML='';
-
-    let dados=[];
-
-    if(perfil==="conservador"){
-        dados=[
-        ["Renda Fixa",0,60],
-        ["FIIs",0,20],
-        ["Ações",0,10],
-        ["Exterior",0,5],
-        ["Alternativos/Cripto",0,5]
-        ];
-    }
-
-    if(perfil==="moderado"){
-        dados=[
-        ["Renda Fixa",0,40],
-        ["FIIs",0,20],
-        ["Ações",0,20],
-        ["Exterior",0,15],
-        ["Alternativos/Cripto",0,5]
-        ];
-    }
-
-    if(perfil==="arrojado"){
-        dados=[
-        ["Ações",0,35],
-        ["Exterior",0,25],
-        ["FIIs",0,20],
-        ["Renda Fixa",0,10],
-        ["Alternativos/Cripto",0,10]
-        ];
-    }
-
-    if(perfil==="agressivo"){
-        dados=[
-        ["Ações Brasil",0,30],
-        ["Ações Exterior",0,30],
-        ["FIIs",0,15],
-        ["Alternativos/Cripto",0,15],
-        ["Renda Fixa",0,10]
-        ];
-    }
-
-    dados.forEach(d=>adicionarLinha(d[0],d[1],d[2]));
-}
-
-function calcular(){
-    const aporte=Number(document.getElementById("aporte").value);
-    const patrimonio=Number(document.getElementById("patrimonio").value);
-
-    const linhas=document.querySelectorAll("#tabela tbody tr");
-
-    let classes=[], valoresAtuais=[], valoresNovos=[], metas=[];
-    let totalFaltante=0;
-
-    linhas.forEach(linha=>{
-        const classe=linha.querySelector(".classe").value;
-        const atualPerc=Number(linha.querySelector(".atual").value);
-        const metaPerc=Number(linha.querySelector(".meta").value);
-
-        const valorAtual=patrimonio*(atualPerc/100);
-        const valorMeta=(patrimonio+aporte)*(metaPerc/100);
-
-        const diferenca=valorMeta-valorAtual;
-        if(diferenca>0) totalFaltante+=diferenca;
-
-        classes.push(classe);
-        valoresAtuais.push(valorAtual);
-        metas.push(metaPerc);
-    });
-
-    linhas.forEach((linha,i)=>{
-        const valorAtual=valoresAtuais[i];
-        const metaPerc=metas[i];
-        const valorMeta=(patrimonio+aporte)*(metaPerc/100);
-        const diferenca=valorMeta-valorAtual;
-
-        let aporteClasse=0;
-        if(diferenca>0 && totalFaltante>0){
-            aporteClasse=(diferenca/totalFaltante)*aporte;
-        }
-
-        valoresNovos.push(valorAtual+aporteClasse);
-
-        linha.querySelector(".aporteSug").innerText=
-        "R$ "+aporteClasse.toFixed(2);
-    });
-
-    gerarGraficos(classes,valoresAtuais,valoresNovos);
-}
-
-function gerarGraficos(labels, dados1, dados2){
-    if(chartAtual) chartAtual.destroy();
-    if(chartNovo) chartNovo.destroy();
-
-    chartAtual=new Chart(document.getElementById("graficoAtual"),{
-        type:"pie",
-        data:{labels:labels,datasets:[{data:dados1}]},
-        options:{plugins:{legend:{labels:{color:"white"}}}}
-    });
-
-    chartNovo=new Chart(document.getElementById("graficoNovo"),{
-        type:"pie",
-        data:{labels:labels,datasets:[{data:dados2}]},
-        options:{plugins:{legend:{labels:{color:"white"}}}}
-    });
-}
-
-document.body.addEventListener("input",calcular);
-
-function salvarLayout(){
-    const linhas=document.querySelectorAll("#tabela tbody tr");
-    let dados=[];
-    linhas.forEach(l=>{
-        dados.push({
-            classe:l.querySelector(".classe").value,
-            atual:l.querySelector(".atual").value,
-            meta:l.querySelector(".meta").value
-        });
-    });
-
-    localStorage.setItem("layout",JSON.stringify({
-        aporte:document.getElementById("aporte").value,
-        patrimonio:document.getElementById("patrimonio").value,
-        perfil:document.getElementById("perfil").value,
-        dados:dados
-    }));
-
-    alert("Layout salvo!");
-}
-
-window.onload=function(){
-    if(localStorage.getItem("layout")){
-        const layout=JSON.parse(localStorage.getItem("layout"));
-        document.getElementById("aporte").value=layout.aporte;
-        document.getElementById("patrimonio").value=layout.patrimonio;
-        document.getElementById("perfil").value=layout.perfil;
-        layout.dados.forEach(d=>adicionarLinha(d.classe,d.atual,d.meta));
-        calcular();
-    }
-}
-
-async function exportarPDF(){
-    const {jsPDF}=window.jspdf;
-    const canvas=await html2canvas(document.body);
-    const imgData=canvas.toDataURL("image/png");
-    const pdf=new jsPDF();
-    pdf.addImage(imgData,"PNG",0,0,210,0);
-    pdf.save("planejamento.pdf");
-}
-
-if("serviceWorker" in navigator){
-    navigator.serviceWorker.register("service-worker.js");
+if ('serviceWorker' in navigator) {
+navigator.serviceWorker.register('service-worker.js');
 }
 </script>
 
